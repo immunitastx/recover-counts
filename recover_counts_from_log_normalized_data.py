@@ -3,6 +3,13 @@ import numpy as np
 import pandas as pd
 import sys
 from optparse import OptionParser
+import json
+
+# Small number for checking integer values in presence of floating point error
+EPSILON = 1e-10
+
+# Maximum default size-factor search range
+MAX_RANGE = 1e5
 
 def main():
     usage = "%prog [options] input_file" 
@@ -10,6 +17,7 @@ def main():
     parser.add_option("-d", "--data_type", help="Data type (required). Must be one of: 'TSV', 'CSV'")
     parser.add_option("-l", "--log_base", help="Base of logarithm used for normalization. If not provided, the natural logarithm is assumed.")
     parser.add_option("-m", "--mult_factor", help="Multiplicative factor used for normalized (e.g., for TPM, this is one million)")
+    parser.add_option("-a", "--max_size_factor", help="Maximum size-factor search value for each cell/sample. Default: 100k (for 10x scRNA-seq data)")
     parser.add_option("-t", "--transpose", action='store_true', help="Transposed matrix. If True, the input matrix is gene-by-cell. If False, the input matrix is cell-by-gene")
     parser.add_option("-v", "--verbose", action='store_true', help="Verbose. If True, output logging information.")
     parser.add_option("-o", "--output_file", help="Output file")
@@ -38,6 +46,11 @@ def main():
     else:
         raise Exception("Please provide a data type (TSV or CSV) using the '-d' option.")
 
+    if options.max_size_factor:
+        max_range = int(options.max_size_factor)
+    else:
+        max_range = MAX_RANGE
+
     verbose = options.verbose
 
     df_expr = pd.read_csv(in_f, sep=sep, index_col=0)
@@ -49,7 +62,10 @@ def main():
 
     # Recover counts
     counts, size_factors = recover_counts(
-        X, mult_factor, log_base=log_base, 
+        X, 
+        mult_factor,
+        max_range, 
+        log_base=log_base, 
         verbose=verbose
     )
     if options.transpose:
@@ -68,7 +84,7 @@ def main():
     df_out.to_csv(out_f, sep=sep)
 
 
-def recover_counts(X, mult_value, log_base=None, verbose=True):
+def recover_counts(X, mult_value, max_range, log_base=None, verbose=True):
     """
     Given log-normalized gene expression data, recover the raw read/UMI counts by
     inferring the unknown size factors.
@@ -78,6 +94,8 @@ def recover_counts(X, mult_value, log_base=None, verbose=True):
     X: 
         The log-normalized expression data. This data is assumed to be normalized 
         via X := log(X/S * mult_value + 1)
+    max_range:
+        Maximum size-factor search range to use in binary search.
     mult_value:
         The multiplicative value used in the normalization. For example, for TPM
         this value is one millsion. For logT10K, this value is ten thousand.
@@ -102,7 +120,7 @@ def recover_counts(X, mult_value, log_base=None, verbose=True):
     for x_i, x in enumerate(X):
         if verbose and x_i % 100 == 0:
             print(f"Found size factor in {x_i} cells...")
-        s = binary_search(x)
+        s = binary_search(x, max_r=max_range)
         size_factors.append(s)
     counts = X.T * size_factors
     counts = (counts.T).astype(int)

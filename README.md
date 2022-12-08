@@ -18,6 +18,9 @@ Options:
   -m MULT_FACTOR, --mult_factor=MULT_FACTOR
                         Multiplicative factor used for normalized (e.g., for
                         TPM, this is one million)
+  -a MAX_SIZE_FACTOR, --max_size_factor=MAX_SIZE_FACTOR
+                        Maximum size-factor search value for each cell/sample.
+                        Default: 100k (for 10x scRNA-seq data)
   -t, --transpose       Transposed matrix. If True, the input matrix is gene-
                         by-cell. If False, the input matrix is cell-by-gene
   -v, --verbose         Verbose. If True, output logging information.
