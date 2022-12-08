@@ -4,6 +4,9 @@ This script recovers raw counts from log-normalized gene expressiond data. Speci
 each cell/sample was normalized via: X = log(C/S * M + 1) where C are the counts, S are the total counts in that 
 cell/sample, and M is a multiplicative factor (e.g., for TPM data, this value would be one million). 
 
+Note this function assumes that the smallest non-zero count in the data is 1 and performs a binary search over possible
+size-factors until it finds the size factor for which we can recover a count of one using the inverse of the log-normalization
+function.
 
 ```
 Usage: recover_counts_from_log_normalized_data.py [options] input_file
