@@ -30,3 +30,13 @@ Options:
   -o OUTPUT_FILE, --output_file=OUTPUT_FILE
                         Output file
 ```
+
+## Unit testing
+
+To test the code, download a test scRNA-seq dataset from GEO (from [Laughney et al.](https://doi.org/10.1038/s41591-019-0750-6)) via the following command:
+
+`curl -O ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM3516nnn/GSM3516673/suppl/GSM3516673_MSK_LX682_NORMAL_dense.csv.gz`
+
+Then, run the unit test via:
+
+`python -m unittest test.py`
