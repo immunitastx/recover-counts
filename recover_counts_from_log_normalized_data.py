@@ -71,6 +71,9 @@ def main():
     if options.transpose:
         counts = counts.T
 
+    print(size_factors)
+    print(np.median(size_factors))
+    
     # Create output dataframe
     if verbose:
         print(f"Writing output to {out_f}...")
@@ -145,13 +148,26 @@ def binary_search(vec, min_r=0, max_r=100000):
     while True:
         curr_s = int((max_bound - min_bound) / 2) + min_bound
         cand_count = min_nonzero * curr_s
-        if np.abs(cand_count - 1) < 1e-10:
+
+        if np.abs(cand_count - 1) < EPSILON:
             return curr_s
         elif cand_count > 1: # The size factor is too big
             max_bound = curr_s 
         elif cand_count < 1: # The size factor is too small
             min_bound = curr_s
 
+        # Sometimes the floating point percision is higher than our check. Instead of relaxing 
+        # our tolerance, we simply choose the size-factor with the smaller difference between
+        # the putative one-count and the true putative one-count.
+        if max_bound - min_bound == 1:
+            cand_count_max = min_nonzero * max_bound
+            cand_count_min = min_nonzero * min_bound
+            diff_max = np.abs(cand_count_max - 1)
+            diff_min = np.abs(cand_count_min - 1)
+            if diff_max < diff_min:
+                return max_bound
+            else:
+                return min_bound
 
 if __name__ == "__main__":
     main()
