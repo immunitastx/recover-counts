@@ -11,6 +11,8 @@ That is, 1 = (exp(X) - 1) * (S/M). Unfortunately, we don't know S. This algorith
 values for S, the total counts, until it finds the value for which we can recover a count of one using the inverse of the 
 log-normalization function.
 
+By default this program assumes the input matrix is cell-by-gene. To input a gene-by-cell matrix, use the `--transpose` flag as described below:
+
 ```
 Usage: recover_counts_from_log_normalized_data.py [options] input_file
 
