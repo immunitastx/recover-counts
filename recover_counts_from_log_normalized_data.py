@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import h5py
 import numpy as np
 import pandas as pd
@@ -17,7 +19,7 @@ def main():
     parser.add_option("-d", "--data_type", help="Data type (required). Must be one of: 'TSV', 'CSV'")
     parser.add_option("-l", "--log_base", help="Base of logarithm used for normalization. If not provided, the natural logarithm is assumed.")
     parser.add_option("-m", "--mult_factor", help="Multiplicative factor used for normalized (e.g., for TPM, this is one million)")
-    parser.add_option("-a", "--max_size_factor", help="Maximum size-factor search value for each cell/sample. Default: 100k (for 10x scRNA-seq data)")
+    parser.add_option("-a", "--max_count", help="Maximum total UMI count/read depth for each cell/sample. Default: 100k (for 10x scRNA-seq data)")
     parser.add_option("-t", "--transpose", action='store_true', help="Transposed matrix. If True, the input matrix is gene-by-cell. If False, the input matrix is cell-by-gene")
     parser.add_option("-v", "--verbose", action='store_true', help="Verbose. If True, output logging information.")
     parser.add_option("-o", "--output_file", help="Output file")
@@ -46,8 +48,8 @@ def main():
     else:
         raise Exception("Please provide a data type (TSV or CSV) using the '-d' option.")
 
-    if options.max_size_factor:
-        max_range = int(options.max_size_factor)
+    if options.max_count:
+        max_range = int(options.max_count)
     else:
         max_range = MAX_RANGE
 
@@ -156,9 +158,11 @@ def binary_search(vec, min_r=0, max_r=100000):
         elif cand_count < 1: # The size factor is too small
             min_bound = curr_s
 
-        # Sometimes the floating point percision is higher than our check. Instead of relaxing 
-        # our tolerance, we simply choose the size-factor with the smaller difference between
-        # the putative one-count and the true putative one-count.
+        # Sometimes the floating point error is higher than our tolerance. This will manifest 
+        # in the binary search algorithm getting stuck deciding between two consecutive integers.
+        # Instead of relaxing our tolerance, we simply choose the size-factor that leads to a 
+        # smaller error between the putative one-count normalized value and the true one-count 
+        # normalized value.
         if max_bound - min_bound == 1:
             cand_count_max = min_nonzero * max_bound
             cand_count_min = min_nonzero * min_bound
