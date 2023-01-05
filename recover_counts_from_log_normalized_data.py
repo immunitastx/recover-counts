@@ -73,9 +73,6 @@ def main():
     if options.transpose:
         counts = counts.T
 
-    print(size_factors)
-    print(np.median(size_factors))
-    
     # Create output dataframe
     if verbose:
         print(f"Writing output to {out_f}...")
